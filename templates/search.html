@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Search — PSE{% endblock %}
+{% block content %}
+<h1>Search</h1>
+
+<div class="layout">
+  <form method="get" action="{{ url_for('search.search_page') }}" class="filters card" id="filter-form">
+    <h3>Query</h3>
+    <input type="search" name="q" value="{{ f.q }}" placeholder="words, &quot;phrases&quot;, prefix*"
+           autofocus class="grow">
+
+    <h3>Type</h3>
+    <select name="type" onchange="this.form.submit()">
+      <option value="">any</option>
+      {% for t in ['pdf','docx','image','audio','video','web','text','other'] %}
+      <option value="{{ t }}" {% if f.type == t %}selected{% endif %}>{{ t }}</option>
+      {% endfor %}
+    </select>
+
+    <h3>Category</h3>
+    <select name="category" onchange="this.form.submit()">
+      <option value="">any</option>
+      {% for c in ['banned','unbanned','uncategorized'] %}
+      <option value="{{ c }}" {% if f.category == c %}selected{% endif %}>{{ c }}</option>
+      {% endfor %}
+    </select>
+
+    <h3>Tag</h3>
+    <select name="tag" onchange="this.form.submit()">
+      <option value="">any</option>
+      {% for t in tags %}
+      <option value="{{ t }}" {% if f.tag == t %}selected{% endif %}>{{ t }}</option>
+      {% endfor %}
+    </select>
+
+    <h3>Modified between</h3>
+    <input type="date" name="date_from" value="{{ f.date_from }}">
+    <input type="date" name="date_to" value="{{ f.date_to }}">
+    <button type="submit" class="primary">Search</button>
+    <a class="btn" href="{{ url_for('search.search_page') }}">Reset</a>
+  </form>
+
+  <div class="results">
+    {% if results %}
+      <p class="muted">{{ results.total }} result{{ '' if results.total == 1 else 's' }}
+        {% if results.error %}— error: {{ results.error }}{% endif %}</p>
+      {% for r in results.results %}
+      <article class="result card">
+        <div class="result-head">
+          <span class="badge badge-type">{{ r.doc_type }}</span>
+          <a class="result-title" href="{{ url_for('manage.doc_view', doc_id=r.id) }}">{{ r.title }}</a>
+          <span class="badge badge-{{ r.category }}">{{ r.category }}</span>
+        </div>
+        {% if r.tags %}<div class="tags">
+          {% for t in r.tags %}<span class="chip">{{ t }}</span>{% endfor %}
+        </div>{% endif %}
+        <p class="snippet">{{ r.snippet | safe }}</p>
+        <p class="muted small ellip">{{ r.path }} · {{ r.size | filesizeformat }}</p>
+      </article>
+      {% endfor %}
+
+      {% if results.pages > 1 %}
+      <nav class="pager">
+        {% if page > 1 %}<a href="{{ url_for('search.search_page', page=page-1, **f) }}">&laquo; prev</a>{% endif %}
+        <span>page {{ page }} / {{ results.pages }}</span>
+        {% if page < results.pages %}<a href="{{ url_for('search.search_page', page=page+1, **f) }}">next &raquo;</a>{% endif %}
+      </nav>
+      {% endif %}
+    {% elif results is none %}
+      <p class="muted">Enter a query or set filters, then press Search.</p>
+    {% else %}
+      <p class="muted">No results. Try fewer filters.</p>
+    {% endif %}
+  </div>
+</div>
+
+<form method="post" action="{{ url_for('search.save_search_route') }}" class="inline-save card">
+  <input type="hidden" name="q" value="{{ f.q }}">
+  <input type="hidden" name="type" value="{{ f.type }}">
+  <input type="hidden" name="category" value="{{ f.category }}">
+  <input type="hidden" name="tag" value="{{ f.tag }}">
+  <input type="hidden" name="date_to" value="{{ f.date_to }}">
+  <input type="hidden hidden-x" value="1">
+  <input type="text" name="name" placeholder="Save this search as…" required>
+  <button type="submit">Save search</button>
+</form>
+{% endblock %}

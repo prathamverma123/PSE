@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Documents — PSE{% endblock %}
+{% block content %}
+<h1>Documents <span class="muted">({{ total }} total)</span></h1>
+
+<form method="get" class="bar">
+  <input type="search" name="q" value="{{ filters.q }}" placeholder="Filter by title/path…">
+  <select name="type">
+    <option value="">type: any</option>
+    {% for t in ['pdf','docx','image','audio','video','web','text','other'] %}
+    <option value="{{ t }}" {% if filters.type == t %}selected{% endif %}>type: {{ t }}</option>
+    {% endfor %}
+  </select>
+  <select name="category">
+    <option value="">category: any</option>
+    {% for c in ['banned','unbanned','uncategorized'] %}
+    <option value="{{ c }}" {% if filters.category == c %}selected{% endif %}>category: {{ c }}</option>
+    {% endfor %}
+  </select>
+  <select name="tag">
+    <option value="">tag: any</option>
+    {% for t in tags %}<option value="{{ t.name }}" {% if filters.tag == t.name %}selected{% endif %}>{{ t.name }} ({{ t.uses }})</option>{% endfor %}
+  </select>
+  <button type="submit">Filter</button>
+</form>
+
+<section class="card">
+  <h3>Add manually</h3>
+  <form method="post" action="{{ url_for('manage.add_documents') }}">
+    <input type="hidden" name="_csrf" value="{{ session['_csrf'] }}">
+    <input type="text" name="path" placeholder="C:\path\to\file or folder" class="grow">
+    <button type="submit">Add</button>
+  </form>
+  <p class="muted small">A directory starts a background crawl job; a single file is indexed immediately.</p>
+</section>
+
+{% if docs %}
+<table class="table">
+  <tr><th>Title</th><th>Type</th><th>Category</th><th>Tags</th><th>Size</th><th>Modified</th><th></th></tr>
+  {% for d in docs %}
+  <tr>
+    <td><a href="{{ url_for('manage.doc_view', doc_id=d.id) }}">{{ d.title or d.path }}</a>
+        <div class="muted small ellip">{{ d.path }}</div></td>
+    <td><span class="badge badge-type">{{ d.doc_type }}</span></td>
+    <td>
+      <form method="post" action="{{ url_for('manage.doc_category', doc_id=d.id) }}" class="inline">
+        <input type="hidden" name="_csrf" value="{{ session['_csrf'] }}">
+        <select name="category" onchange="this.form.submit()">
+          {% for c in ['banned','unbanned','uncategorized'] %}
+          <option value="{{ c }}" {% if d.category == c %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </form>
+    </td>
+    <td>
+      <form method="post" action="{{ url_for('manage.doc_tags', doc_id=d.id) }}" class="inline tags-form">
+        <input type="hidden" name="_csrf" value="{{ session['_csrf'] }}">
+        <input type="hidden" name="action" value="add">
+        <input type="text" name="tags" placeholder="add tag(s), comma-separated">
+        <button class="btn small-btn" type="submit">+</button>
+      </form>
+      {% for t in d_tags(d.id) %}
+      <form method="post" action="{{ url_for('manage.doc_tags', doc_id=d.id) }}" class="inline">
+        <input type="hidden" name="_csrf" value="{{ session['_csrf'] }}">
+        <input type="hidden" name="action" value="remove">
+        <input type="hidden" name="tags" value="{{ t }}">
+        <button class="chip chip-x" title="remove {{ t }}">{{ t }} ✕</button>
+      </form>
+      {% endfor %}
+    </td>
+    <td class="muted">{{ d.size | filesizeformat }}</td>
+    <td class="muted small">{{ d.mtime | datetimeformat }}</td>
+    <td>
+      <form method="post" action="{{ url_for('manage.doc_delete', doc_id=d.id) }}" class="inline">
+        <input type="hidden" name="_csrf" value="{{ session['_csrf'] }}">
+        <button class="btn danger small-btn">✕</button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p class="muted">No documents{% if filters.q or filters.type or filters.category or filters.tag %} matching these filters{% endif %}. Add a path above or <a href="{{ url_for('manage.crawl_page') }}">run a crawl</a>.</p>
+{% endif %}
+{% endblock %}

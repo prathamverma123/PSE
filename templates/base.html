@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Personal Search Engine{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<nav class="topnav">
+  <a class="brand" href="{{ url_for('search.index') }}">🔍 PSE</a>
+  {% if current_user.is_authenticated %}
+  <a href="{{ url_for('search.search_page') }}">Search</a>
+  <a href="{{ url_for('manage.documents') }}">Documents</a>
+  <a href="{{ url_for('manage.crawl_page') }}">Crawl</a>
+  <a href="{{ url_for('backup.backup_page') }}">Backup</a>
+  <a href="{{ url_for('search.saved_list') }}">Saved</a>
+  <span class="spacer"></span>
+  <span class="user">{{ current_user.username }}</span>
+  <a href="{{ url_for('auth.logout') }}">Log out</a>
+  {% endif %}
+</nav>
+<main>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for cat, msg in messages %}
+        <div class="flash flash-{{ cat }}">{{ msg }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</main>
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Backup — PSE{% endblock %}
+{% block content %}
+<h1>Backup &amp; restore</h1>
+
+<section class="card">
+  <h3>Create backup</h3>
+  <p>Database: {{ 'present' if db_exists else 'missing' }}
+     {% if db_exists %}({{ db_size | filesizeformat }}){% endif %}</p>
+  <form method="post" action="{{ url_for('backup.backup_create') }}">
+    <input type="hidden" name="_csrf" value="{{ session['_csrf'] }}">
+    <button type="submit" class="primary">Create backup zip</button>
+  </form>
+  <p class="muted small">The zip contains the SQLite database and the full-text index, written to the local backups folder.</p>
+</section>
+
+<section class="card">
+  <h3>Restore</h3>
+  <form method="post" action="{{ url_for('backup.backup_restore') }}" enctype="multipart/form-data">
+    <input type="hidden" name="_csrf" value="{{ session['_csrf'] }}">
+    <label>Upload a backup zip
+      <input type="file" name="backup" accept=".zip">
+    </label>
+    <label>…or point to a local zip
+      <input type="text" name="path" placeholder="C:\backups\pse-backup-....zip">
+    </label>
+    <button type="submit" class="danger">Restore</button>
+  </form>
+  <p class="muted small">Restore replaces the current database and index. Back up first if in doubt.</p>
+</section>
+
+<section>
+  <h2>Existing backups</h2>
+  {% if backups %}
+  <table class="table">
+    <tr><th>Name</th><th>Size</th><th>Created</th><th></th></tr>
+    {% for b in backups %}
+    <tr>
+      <td>{{ b.name }}</td>
+      <td>{{ b.size | filesizeformat }}</td>
+      <td class="muted small">{{ b.mtime | datetimeformat }}</td>
+      <td><a class="btn" href="{{ url_for('backup.backup_download', name=b.name) }}">Download</a></td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p class="muted">No backups yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

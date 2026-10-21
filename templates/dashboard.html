@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — PSE{% endblock %}
+{% block content %}
+<h1>Dashboard</h1>
+<section class="cards">
+  <div class="card">
+    <h3>Documents</h3>
+    <p class="big">{{ stats.documents }}</p>
+    <p class="muted">in the SQLite database</p>
+  </div>
+  <div class="card">
+    <h3>Indexed</h3>
+    <p class="big">{{ stats.index.doc_count }}</p>
+    <p class="muted">in the full-text index</p>
+  </div>
+  <div class="card">
+    <h3>Tags</h3>
+    <p class="big">{{ stats.tags | length }}</p>
+    <p class="muted">in use</p>
+  </div>
+</section>
+
+<section>
+  <h2>By type</h2>
+  {% if stats.by_type %}
+  <table class="table">
+    <tr><th>Type</th><th>Count</th></tr>
+    {% for t, n in stats.by_type.items() %}
+    <tr><td>{{ t }}</td><td>{{ n }}</td></tr>
+    {% endfor %}
+  </table>
+  {% else %}<p class="muted">Nothing indexed yet. <a href="{{ url_for('manage.crawl_page') }}">Start a crawl</a>.</p>{% endif %}
+</section>
+
+<section>
+  <h2>By category</h2>
+  {% if stats.by_category %}
+  <table class="table">
+    <tr><th>Category</th><th>Count</th></tr>
+    {% for t, n in stats.by_category.items() %}
+    <tr><td>{{ t }}</td><td>{{ n }}</td></tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+</section>
+
+<section>
+  <h2>Recent crawl jobs</h2>
+  {% if jobs %}
+  <table class="table">
+    <tr><th>#</th><th>Kind</th><th>Target</th><th>Status</th><th>Indexed</th><th>Errors</th></tr>
+    {% for j in jobs %}
+    <tr>
+      <td>{{ j.id }}</td><td>{{ j.kind }}</td><td class="ellip">{{ j.target }}</td>
+      <td><span class="badge badge-{{ j.status }}">{{ j.status }}</span></td>
+      <td>{{ j.indexed }}</td><td>{{ j.errors }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}<p class="muted">No crawls yet.</p>{% endif %}
+</section>
+{% endblock %}

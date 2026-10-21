@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Saved searches — PSE{% endblock %}
+{% block content %}
+<h1>Saved searches</h1>
+{% if saved %}
+<table class="table">
+  <tr><th>Name</th><th>Query</th><th>Actions</th></tr>
+  {% for s in saved %}
+  <tr>
+    <td>{{ s.row.name }}</td>
+    <td class="muted">{{ s.params | tojson }}</td>
+    <td class="actions">
+      <a class="btn" href="{{ url_for('search.saved_run', search_id=s.row.id) }}">Run</a>
+      <form method="post" action="{{ url_for('search.saved_delete', search_id=s.row.id) }}" class="inline">
+        <input type="hidden" name="_csrf" value="{{ session['_csrf'] }}">
+        <button class="btn danger">Delete</button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p class="muted">No saved searches yet. Run a search and save it from the results page.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Crawl — PSE{% endblock %}
+{% block content %}
+<h1>Crawl</h1>
+
+<div class="grid2">
+  <section class="card">
+    <h3>Directory</h3>
+    <form method="post" action="{{ url_for('manage.crawl_start') }}">
+      <input type="hidden" name="_csrf" value="{{ session['_csrf'] }}">
+      <input type="hidden" name="kind" value="directory">
+      <input type="text" name="path" placeholder="C:\path\to\folder" class="grow">
+      <button type="submit" class="primary">Start crawl</button>
+    </form>
+    <p class="muted small">Recursive walk; skipped names: git, node_modules, __pycache__… Re-crawls only touch changed files (content hash + mtime).</p>
+  </section>
+
+  <section class="card">
+    <h3>URL</h3>
+    <form method="post" action="{{ url_for('manage.crawl_start') }}">
+      <input type="hidden" name="_csrf" value="{{ session['_csrf'] }}">
+      <input type="hidden" name="kind" value="url">
+      <input type="url" name="url" placeholder="https://example.com/page" class="grow">
+      <input type="number" name="depth" min="0" max="5" placeholder="depth (default from config)">
+      <button type="submit" class="primary">Fetch &amp; follow</button>
+    </form>
+    <p class="muted small">Only pages YOU explicitly provide are fetched. Same-host links only by default, bounded depth/page limits, polite delay.</p>
+  </section>
+</div>
+
+<section>
+  <h2>Jobs</h2>
+  <table class="table" id="jobs-table">
+    <tr><th>#</th><th>Kind</th><th>Target</th><th>Status</th><th>Progress</th><th>Indexed</th><th>Skipped</th><th>Errors</th><th>Message</th></tr>
+    {% for j in jobs %}
+    <tr data-job="{{ j.id }}">
+      <td>{{ j.id }}</td>
+      <td>{{ j.kind }}</td>
+      <td class="ellip">{{ j.target }}</td>
+      <td><span class="badge badge-{{ j.status }}">{{ j.status }}</span></td>
+      <td class="progress">{{ j.processed }}/{{ j.total }}</td>
+      <td class="indexed">{{ j.indexed }}</td>
+      <td class="skipped">{{ j.skipped }}</td>
+      <td class="errors">{{ j.errors }}</td>
+      <td class="muted small ellip msg">{{ j.message }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  <p class="muted small">This table auto-refreshes every 2 seconds while a job runs.</p>
+</section>
+{% endblock %}

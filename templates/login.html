@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Log in — Personal Search Engine{% endblock %}
+{% block content %}
+<div class="login-card">
+  <h1>{% if needs_setup %}Create your account{% else %}Log in{% endif %}</h1>
+  <p class="muted">This instance is local-only. Everything stays on this machine.</p>
+  <form method="post" action="{{ url_for('auth.login') }}">
+    <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+    <label>Username
+      <input type="text" name="username" autocomplete="username" required autofocus>
+    </label>
+    <label>Password
+      <input type="password" name="password" autocomplete="current-password" required>
+    </label>
+    {% if needs_setup %}
+    <label>Confirm password
+      <input type="password" name="password_confirm" autocomplete="new-password" required>
+    </label>
+    {% endif %}
+    <button type="submit">{% if needs_setup %}Create account{% else %}Log in{% endif %}</button>
+  </form>
+</div>
+{% endblock %}
